@@ -1,0 +1,4 @@
+.CodeMirror {
+  height: 100%;
+  @apply min-h-20;
+}

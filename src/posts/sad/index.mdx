@@ -1,0 +1,153 @@
+---
+title: Blog
+date: Wed Jul 17 2024
+---
+
+# 接口详解
+
+```javascript
+// <!-- 判断action为指定类型时使用icon_url，否则使用接口请求 -->
+
+<input />;
+function getIsOpenInBrowser(action) {
+  return [
+    'ApplicationBrowser',
+    'UserBrowser',
+    'OpenGooglePlayPage',
+    'open_in_browser',
+    'OpenGuestUrl',
+  ].includes(action);
+}
+function getIconUrlByStrategy({ action, iconUrl, packageName }) {
+  return getIsOpenInBrowser(action)
+    ? iconUrl
+    : getSpecialSizeIcon({ pkg: packageName });
+}
+
+// <!-- 判断游戏是否是CDN游戏 -->
+function getIsInstallCDN({ action, apk_url }) {
+  return action === 'InstallCDN' && apk_url;
+}
+
+// <!-- 判断是否可进入详情页，浏览器打开或者Google Store app不可进入详情页 -->
+function isAppDetailAccessable(app) {
+  const isGoogleIcon = app.package_name === 'com.android.vending';
+  const isOpenInBrowser = getIsOpenInBrowser(app.action);
+  if (isOpenInBrowser || isGoogleIcon) {
+    return false;
+  }
+  return true;
+}
+```
+
+## 首页轮播图 appcenter/game_center_rotation
+
+- icon 使用规则：判断 app.app_icon_id && app.icon_url，有值使用 app.icon_url,否则使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序，过滤掉无 package_name 及 game_name 游戏
+- background-image：使用优先顺序 full_hd_image>image_url>banner_url
+- cloud 支持：判断是否在云游戏列表中
+
+## 游戏中心 appcenter/game_center_home
+
+- Recommended For You(_latest_game_)
+- Trending Games(_selected_game_)
+- Popular Games in your region(_hot_list_)
+- PG Games(_premium_apps_)
+  - icon 使用规则：使用通用规则：getIconUrlByStrategy
+  - 3:4 icon：app.game_tile_url
+  - list sort：使用接口返回顺序
+  - background-image：使用优先顺序 full_hd_image>image_url>banner_url
+  - cloud 支持：判断是否在云游戏列表中(PG Games 除外，使用自身 app.cloud_app_url 是否有值判断)
+- Collection List - 非 US 区域 OR Category Tags - US 区域(_zhuanti_)
+  - 非美国区域数据没有唯一 ID，无图标显示，美国区域数据 id 可以确定类型通过 id 映射 UI 出的 icon 进行显示：_显示规则--类型游戏大于等于 5，必须在 UI 给定的类型中_
+- oem 为 mac 只显示支持云游戏的 PGgames,其他字段设置为空
+
+## NCM 云游戏 ncm/appsc/v1/bsxGetAppsList
+
+- icon 使用规则：app.media?.icon
+- 3:4 icon：app.media?.tile
+- list sort：使用接口返回顺序
+- background-image：app.media.desktop?.banner
+- cloud 支持：支持，app.playUrl 链接后添加source: 'launcher', utm_medium: 'bluestacksx'参数
+
+## 搜索列表 launcher/search/v1
+
+- icon 使用规则：判断 app.icon_url，有值使用 app.icon_url,否则使用通用规则：getIconUrlByStrategy
+- category：app.genre && app.genre[0] || app.type && app.type[0]
+- game_name：app.game_name || app.app_name || ''
+- 3:4 icon：app.game_tile_url
+- list sort：使用接口返回顺序
+- cloud 支持：判断是否在云游戏列表中
+
+## Feature Games bs4/get_cpi_apps_for_quest
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：判断是否在云游戏列表中
+
+## Category 请求列表 appcenter/app_center_topic_data
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：判断是否在云游戏列表中
+
+## 游戏详情页游戏列表 `${window.__HOST_CONFIG__.detailHost}/${packageName}?token=13c7bf80-5917-4343-8a75-13582c438425`
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：判断是否在云游戏列表中
+
+## Suggest 游戏 launcher/get_suggested_apps
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：判断是否在云游戏列表中
+
+## Promotion 推荐游戏 来自客户端数据
+
+- icon 使用规则：app.app_pkg_icon_url
+- cloud 支持：app.cloud_app_url 是否有值
+- action：app.extra_payload.click_generic_action
+- action_value：app.extra_payload.click_action_value
+- apk_url：action 为 InstallCDN 时设置为 app.extra_payload.click_action_value
+
+## Marketplace 游戏 launcher/get_marketplace_apps（点击直接打开浏览器）
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：不支持
+
+## Top store 游戏 bs-images/homepage/play-instantly/final_data.json（弃用）
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：app.play_url 是否有值
+
+## 每周游戏 Weekly game get_weekly_apps（弃用）
+
+- icon 使用规则：使用通用规则：getIconUrlByStrategy
+- list sort：使用接口返回顺序
+- cloud 支持：支持
+
+# 页面逻辑
+
+## 详情页
+
+- 游戏数据整合 _PG game 及云游戏判断_
+  - 判断是否是 PG game，是则替换游戏对象 game
+  - 判断是否是云游戏，是则替换 cloud_app_url、cloud_supported、showCloudBtn
+- 背景大图 _appDetail?.game_overview?.fullhd_banner || appDetail?.game_overview?.banner_url || appDetail?.game_overview?.app_banner_url_
+- 背景视频 _非 JP：appDetail?.gallery.nowgg_videos?.desktop[0] 且 game_specific_video 有值的话必须为 true，JP：使用默认背景视频_
+- 云游戏链接 _判断 appDetail?.game_overview?.try_instantly_url 是否有值，有则使用并设置为支持云游戏，无使用之前配置_
+- Header Banner
+  - 接口请求失败默认使用外部传递数据显示基本信息
+  - Action Buttons
+    - oem 为 Mac 且不支持云游戏，显示 Vote for this game to be added to InstaPlay 按钮
+    - oem 不为 Mac 且 appDetail?.non_android_game_data 不为空，显示 Play PC Version 按钮
+    - 支持云游戏下，html5 游戏或则无 tryInstantlyUrl 情况下显示 instantPlayInBrowser，否则显示 tryInstantl
+- Screenshots & Video _非 JP 及 screenshotsAndVideos 数据不为空_
+  - 视频使用 appDetail.gallery.gp_videos
+- Overview _非 JP 及 appDetail.game_overview.game_description || appDetail.game_overview.google_play_description 有值_
+- Game Features _非 JP 及 game_featuress 数据不为空且非单纯云游戏（h5 游戏）_
+- More Strategy Apps _categoryApps 不为空且 appDetail.similar_category_games_meta?.title 有值_
+- Similar Game
