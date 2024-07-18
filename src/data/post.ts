@@ -8,6 +8,10 @@ import { revalidatePath } from 'next/cache';
 
 const rootDirectory = path.join(process.cwd(), 'src', 'posts');
 
+async function sleep(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 export const getAllPostsMeta = async () => {
   const dirs = fs
     .readdirSync(rootDirectory, { withFileTypes: true })
@@ -56,7 +60,9 @@ export const updatePost = async ({
 }) => {
   const filePath = path.join(rootDirectory, slug, 'index.mdx');
   fs.writeFileSync(filePath, content);
-  revalidatePath('/');
+  revalidatePath('/', 'page');
+  revalidatePath(`/post/${slug}`);
+  await sleep(500);
   return {
     success: true,
   };
@@ -76,6 +82,7 @@ export const savePost = async ({
   const filePath = path.join(rootDirectory, slug, 'index.mdx');
   fs.writeFileSync(filePath, content);
   revalidatePath('/');
+  await sleep(500);
   return {
     success: true,
   };
@@ -86,6 +93,7 @@ export const deletePost = async (slug: string) => {
     deleteDirectoryRecursive(path.join(rootDirectory, slug));
   }
   revalidatePath('/');
+  await sleep(500);
   return {
     success: true,
   };

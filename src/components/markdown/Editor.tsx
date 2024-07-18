@@ -76,9 +76,10 @@ export default function MarkdownEditor({
             <span>{slug!}</span>
           ) : (
             <input
-              className="rounded-sm px-3 py-1 text-gray-700"
+              className="px-3 py-1 bg-white text-black/80 border border-black/50 rounded focus-visible:outline-none placeholder-black/50"
               value={titleValue}
               onInput={(evt: any) => setTitleValue(evt.target.value)}
+              placeholder="请输入标题"
             />
           )}
         </div>
