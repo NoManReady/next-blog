@@ -4,7 +4,7 @@ export default function HomeLink() {
   return (
     <Link
       href="/"
-      className="text-gray-700 dark:text-gray-500 hover:text-purple-500 text-base hover:underline underline-offset-4 py-2 px-4 text-sm"
+      className="px-4 py-2 text-base text-sm text-gray-700 underline-offset-4 hover:text-purple-500 hover:underline dark:text-gray-500"
     >
       回到首页
     </Link>

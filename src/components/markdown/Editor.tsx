@@ -63,8 +63,8 @@ export default function MarkdownEditor({
     }
   };
   return (
-    <div className="flex flex-col gap-5 mb-10">
-      <div className="flex justify-between items-center bg-[--layer-1] py-3 px-2 rounded-sm text-sm sticky top-16 z-20">
+    <div className="mb-10 flex flex-col gap-5">
+      <div className="sticky top-16 z-20 flex items-center justify-between rounded-sm bg-[--layer-1] px-2 py-3 text-sm">
         <div className="flex items-center gap-3">
           <Link
             href={slug ? `/post/${slug}` : '/'}
@@ -76,7 +76,7 @@ export default function MarkdownEditor({
             <span>{slug!}</span>
           ) : (
             <input
-              className="px-3 py-1 bg-white text-black/80 border border-black/50 rounded focus-visible:outline-none placeholder-black/50"
+              className="rounded border border-black/50 bg-white px-3 py-1 text-black/80 placeholder-black/50 focus-visible:outline-none"
               value={titleValue}
               onInput={(evt: any) => setTitleValue(evt.target.value)}
               placeholder="请输入标题"
@@ -85,7 +85,7 @@ export default function MarkdownEditor({
         </div>
         <div>
           <button
-            className="text-purple-500 px-3 py-1 border border-purple-600 rounded hover:text-white hover:bg-purple-500"
+            className="rounded border border-purple-600 px-3 py-1 text-purple-500 hover:bg-purple-500 hover:text-white"
             onClick={onSavePost}
           >
             保存
@@ -94,7 +94,7 @@ export default function MarkdownEditor({
       </div>
       <div
         ref={editorRef}
-        className="flex-1 min-h-0 rounded-sm overflow-hidden"
+        className="min-h-0 flex-1 overflow-hidden rounded-sm"
       ></div>
     </div>
   );

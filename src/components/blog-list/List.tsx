@@ -10,16 +10,16 @@ export default function BlogList({ posts }: { posts: PostDetail[] }) {
       {posts.map((item) => {
         return (
           <Link
-            className="block px-6 hover:bg-[--layer-3] group"
+            className="group block px-6 hover:bg-[--layer-3]"
             key={item.meta.id}
             href={`/post/${item.meta.slug}/`}
           >
-            <article className="py-4 border-b border-[--layer-2] group-last-of-type:border-none">
+            <article className="border-b border-[--layer-2] py-4 group-last-of-type:border-none">
               <div className="flex items-center justify-between">
                 <PostTitle post={item} />
                 <DeleteButton slug={item.meta.slug} />
               </div>
-              <div className="text-sm text-[--text-color-3] flex justify-between items-center mt-1">
+              <div className="mt-1 flex items-center justify-between text-sm text-[--text-color-3]">
                 <span>
                   创建时间：{dateFormatter(item.meta.stats.birthtime)}
                 </span>

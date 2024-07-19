@@ -9,7 +9,7 @@ export default function DetailLayout({
   return (
     <>
       {children}
-      <footer className="mt-12 text-center py-10">
+      <footer className="mt-12 py-10 text-center">
         <HomeLink />
       </footer>
     </>
