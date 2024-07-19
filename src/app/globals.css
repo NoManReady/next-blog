@@ -10,6 +10,8 @@
   --layer-2: #f2f3f5;
   --layer-3: #f7f8fa;
 
+  --header-bg: rgba(242, 243, 245, 0.8);
+
   /* text */
   --text-color-1: #252933;
   --text-color-2: #515767;
@@ -26,6 +28,7 @@
     --layer-2: #ffffff1f;
     --layer-3: #ffffff14;
 
+    --header-bg: rgba(24, 24, 24, 0.8);
     /* text */
     --text-color-1: #ffffffcc;
     --text-color-2: #ffffffb3;

@@ -1,21 +1,21 @@
 'use client';
 import { deletePost } from '@/data/post';
-import { useRouter } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
 
 export default function DeleteButton({ slug }: { slug: string }) {
   const status = useFormStatus();
-  const router = useRouter();
-  async function onDeletePost() {
-    await deletePost(slug);
-    router.replace('/');
+  async function onDeletePost(evt: any) {
+    evt.preventDefault();
+    const isOk = confirm('是否确认删除？');
+    if (isOk) {
+      await deletePost(slug);
+    }
   }
-  console.log(status.pending);
   return (
     <button
       disabled={status.pending}
       onClick={onDeletePost}
-      className="text-[--text-color-2] hover:text-red-400 active:text-red-600 text-sm"
+      className="text-sm text-[--text-color-2] hover:text-red-400 active:text-red-600"
     >
       {status.pending ? '删除中' : '删除'}
     </button>

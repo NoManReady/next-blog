@@ -8,6 +8,12 @@ import rehypeKatex from 'rehype-katex';
 import rehypePrettyCode from 'rehype-pretty-code';
 import remarkMath from 'remark-math';
 
+interface IProps {
+  params: {
+    slug: string;
+  };
+}
+
 export async function generateStaticParams() {
   const posts = await getAllPostsMeta();
   return posts.map((post) => ({
@@ -15,7 +21,15 @@ export async function generateStaticParams() {
   }));
 }
 
-export default async function Page({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: IProps) {
+  const slug = decodeURI(params.slug);
+  const post = await getPost(slug);
+  return {
+    title: post?.meta.slug,
+  };
+}
+
+export default async function Page({ params }: IProps) {
   const slug = decodeURI(params.slug);
   const post = await getPost(slug);
 
@@ -27,7 +41,6 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   try {
     postComponents = await import(`@/posts/${slug}/components.ts`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (!error || error.code !== 'MODULE_NOT_FOUND') {
       throw error;
@@ -37,7 +50,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   return (
     <article className="p-4">
       <header className="mb-6">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <h1
             className={[
               sans.className,
@@ -48,12 +61,12 @@ export default async function Page({ params }: { params: { slug: string } }) {
           </h1>
           <Link
             href={'/'}
-            className="text-[--text-color-2] hover:text-[--text-color-3] active:text-[--text-color-1] text-sm"
+            className="text-sm text-[--text-color-2] hover:text-[--text-color-3] active:text-[--text-color-1]"
           >
             ＜返回
           </Link>
         </div>
-        <div className="mt-2 text-[13px] text-gray-700 dark:text-gray-300 flex flex-row justify-between items-center">
+        <div className="mt-2 flex flex-row items-center justify-between text-[13px] text-gray-700 dark:text-gray-300">
           <div className="space-x-2">
             <span>创建时间</span>
             <span>{dateFormatter(post.meta.stats.birthtime)}</span>
@@ -62,7 +75,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
             <span>最后修改时间</span>
             <span>{dateFormatter(post.meta.stats.mtime)}</span>
             <Link
-              className="text-purple-500 hover:text-purple-400 active:text-purple-600 hover:underline underline-offset-4"
+              className="text-purple-500 underline-offset-4 hover:text-purple-400 hover:underline active:text-purple-600"
               href={`/editor/drafts/${slug}`}
             >
               编辑

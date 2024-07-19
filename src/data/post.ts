@@ -93,7 +93,7 @@ export const deletePost = async (slug: string) => {
     deleteDirectoryRecursive(path.join(rootDirectory, slug));
   }
   revalidatePath('/');
-  await sleep(500);
+  // await sleep(500);
   return {
     success: true,
   };
