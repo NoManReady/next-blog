@@ -1,9 +1,11 @@
 'use client';
 import { deletePost } from '@/data/post';
+import { useSession } from 'next-auth/react';
 import { useFormStatus } from 'react-dom';
 
 export default function DeleteButton({ slug }: { slug: string }) {
   const status = useFormStatus();
+  const session = useSession();
   async function onDeletePost(evt: any) {
     evt.preventDefault();
     const isOk = confirm('是否确认删除？');
@@ -11,7 +13,7 @@ export default function DeleteButton({ slug }: { slug: string }) {
       await deletePost(slug);
     }
   }
-  return (
+  return session.status === 'authenticated' ? (
     <button
       disabled={status.pending}
       onClick={onDeletePost}
@@ -19,7 +21,7 @@ export default function DeleteButton({ slug }: { slug: string }) {
     >
       {status.pending ? '删除中' : '删除'}
     </button>
-  );
+  ) : null;
 }
 
 // export default function DeleteButton({ action }: { action: VoidFunction }) {

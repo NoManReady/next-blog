@@ -1,3 +1,4 @@
+import PostEditButton from '@/components/blog-list/PostEditButton';
 import { getAllPostsMeta, getPost } from '@/data/post';
 import { sans } from '@/fonts/fonts';
 import { dateFormatter } from '@/utils/time';
@@ -74,12 +75,7 @@ export default async function Page({ params }: IProps) {
           <div className="space-x-2 text-xs">
             <span>最后修改时间</span>
             <span>{dateFormatter(post.meta.stats.mtime)}</span>
-            <Link
-              className="text-purple-500 underline-offset-4 hover:text-purple-400 hover:underline active:text-purple-600"
-              href={`/editor/drafts/${slug}`}
-            >
-              编辑
-            </Link>
+            <PostEditButton slug={slug} />
           </div>
         </div>
       </header>

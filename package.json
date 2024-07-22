@@ -12,8 +12,10 @@
   "dependencies": {
     "codemirror": "^5.65.16",
     "colorjs.io": "^0.5.2",
+    "crypto-js": "^4.2.0",
     "gray-matter": "^4.0.3",
     "next": "14.2.5",
+    "next-auth": "^4.24.7",
     "next-mdx-remote": "^5.0.0",
     "pinyin": "^4.0.0-alpha.2",
     "react": "^18",
@@ -25,6 +27,7 @@
   },
   "devDependencies": {
     "@types/codemirror": "^5.60.15",
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^20",
     "@types/pinyin": "^2.10.2",
     "@types/react": "^18",
