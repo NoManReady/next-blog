@@ -18,6 +18,7 @@
     "next-auth": "^4.24.7",
     "next-mdx-remote": "^5.0.0",
     "pinyin": "^4.0.0-alpha.2",
+    "pm2": "^6.0.5",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
