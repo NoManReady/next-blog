@@ -1,0 +1,216 @@
+# Dio+Riverpod
+
+```
+✔ 高效网络请求（自动重试 + Token 管理）
+✔ 稳定的缓存机制（短时间内防止重复请求）
+✔ 灵活的控制（支持 forceRefresh 强制刷新）
+✔ 结合 Riverpod（让全局状态管理更清晰）
+```
+
+## 安装依赖
+
+```yaml
+dependencies:
+  dio: ^5.0.0
+  retry: ^3.1.2
+  shared_preferences: ^2.2.0
+  pretty_dio_logger: ^1.3.1
+  dio_cache_interceptor: ^3.4.0
+  dio_cache_interceptor_hive_store: ^3.1.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+```
+
+## 引入 Hive 进行持久化缓存
+
+- 使用 Hive 作为缓存存储，避免 SharedPreferences 不能存二进制数据的限制
+
+```dart
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();  // 初始化 Hive
+  await dioClient.init(); // 初始化 DioClient
+  runApp(ProviderScope(child: MyApp()));
+}
+
+```
+
+## 添加缓存拦截器
+
+
+```dart
+import 'dart:async';
+import 'package:dio/dio.dart';
+import 'package:retry/retry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
+import 'package:hive/hive.dart';
+
+class DioClient {
+  late final Dio _dio;
+  late final SharedPreferences _prefs;
+  late final CacheStore _cacheStore;
+
+  DioClient._internal(); // 私有构造函数
+  static final DioClient _instance = DioClient._internal();
+  factory DioClient() => _instance; // 单例模式
+
+  Future<void> init() async {
+    _prefs = await SharedPreferences.getInstance();
+    _cacheStore = HiveCacheStore(await Hive.openBox('dio_cache')); // 使用 Hive 存储缓存
+
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: "https://api.example.com",
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {"Content-Type": "application/json"},
+      ),
+    );
+
+    // 添加拦截器
+    _dio.interceptors.addAll([
+      _AuthInterceptor(this), // 自动附加 Token
+      _RetryInterceptor(),    // 自动重试
+      _CacheInterceptor(_cacheStore), // 缓存
+      _LogInterceptor(),      // 请求日志
+    ]);
+  }
+
+  Future<Response> get(String path, {Map<String, dynamic>? params, bool forceRefresh = false}) async {
+    return await _executeWithRetry(() => _dio.get(path, queryParameters: params, options: forceRefresh ? Options(extra: {'refresh': true}) : null));
+  }
+
+  Future<Response> post(String path, {Map<String, dynamic>? data}) async {
+    return await _executeWithRetry(() => _dio.post(path, data: data));
+  }
+
+  Future<Response> _executeWithRetry(Future<Response> Function() request) async {
+    return await retry(
+      request,
+      retryIf: (e) => e is DioException && e.type == DioExceptionType.connectionTimeout,
+      maxAttempts: 3,
+    );
+  }
+
+  Future<void> clearCache() async {
+    await _cacheStore.clean();
+  }
+
+  Dio get dio => _dio;
+}
+
+final dioClient = DioClient();
+
+```
+
+✅ 添加 _CacheInterceptor 处理 GET 请求缓存
+✅ forceRefresh 参数可手动刷新缓存
+✅ 提供 clearCache() 方法清理缓存
+
+## 缓存拦截器
+- 新建 _CacheInterceptor：
+```dart
+class _CacheInterceptor extends Interceptor {
+  final CacheStore cacheStore;
+  _CacheInterceptor(this.cacheStore);
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    if (options.extra['refresh'] == true) {
+      await cacheStore.clean(); // 如果 `refresh=true`，则清理缓存
+    }
+    return handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.requestOptions.method == "GET") {
+      cacheStore.set(
+        CacheResponse(
+          key: response.requestOptions.uri.toString(),
+          content: response.data,
+          statusCode: response.statusCode!,
+          headers: response.headers.map,
+          requestDate: DateTime.now(),
+          responseDate: DateTime.now(),
+          maxStale: const Duration(minutes: 5), // 缓存 5 分钟
+        ),
+      );
+    }
+    return handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final cached = await cacheStore.get(err.requestOptions.uri.toString());
+    if (cached != null) {
+      return handler.resolve(Response(
+        requestOptions: err.requestOptions,
+        statusCode: cached.statusCode,
+        data: cached.content,
+        headers: Headers.fromMap(cached.headers),
+      ));
+    }
+    return handler.next(err);
+  }
+}
+
+```
+
+✅ 缓存 GET 请求
+✅ 当网络错误时，自动返回缓存数据
+✅ 支持 forceRefresh 强制刷新
+
+##  在 Riverpod 里使用
+
+```dart
+final dioProvider = Provider<Dio>((ref) => dioClient.dio);
+
+// 获取用户数据（5 分钟缓存）
+final userProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final dio = ref.watch(dioProvider);
+  final response = await dio.get('/user');
+  return response.data;
+});
+
+// 获取最新用户数据（不使用缓存）
+final freshUserProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final dio = ref.watch(dioProvider);
+  final response = await dio.get('/user', options: Options(extra: {'refresh': true}));
+  return response.data;
+});
+
+```
+
+✅ userProvider 会自动缓存 5 分钟
+✅ freshUserProvider 强制刷新数据
+
+## 手动清除缓存
+
+```dart
+void clearCache() async {
+  await dioClient.clearCache();
+  print("缓存已清除！");
+}
+```
+
+✅ 调用 dioClient.clearCache() 可清除所有缓存
+
+
+## 🔥 终极优化总结
+功能	解决方案
+Token 存储	SharedPreferences 持久化
+Token 自动刷新	401 触发 _refreshToken()
+网络请求自动重试	_RetryInterceptor
+日志打印	_LogInterceptor
+GET 请求缓存	_CacheInterceptor + HiveCacheStore
+强制刷新数据	extra: {'refresh': true}
+自动返回缓存数据	网络错误时返回缓存数据
+手动清除缓存	dioClient.clearCache()

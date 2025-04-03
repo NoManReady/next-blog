@@ -1,0 +1,12 @@
+# 端口相关
+
+- 查找占用目标端口的进程
+```shell
+sudo lsof -i :[端口号]
+```
+
+- 根据端口查询的进程ID，关闭
+
+```shell
+sudo kill -9 [ProcessId]
+```

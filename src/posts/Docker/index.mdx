@@ -1,0 +1,31 @@
+# Docker基础
+
+1. 查看所有容器 
+```shell
+docker ps -a
+```
+
+2. 删除容器
+```shell
+docker rm [containerId]
+```
+
+3. 生成镜像文件
+```shell
+docker build -t [image-name] .
+```
+
+4. 启动容器（-it表示可进入控制台，d表示后台运行）
+```shell
+docker run -itd -p 8080:3000 --name [container-name] [image-name]
+```
+
+5. 进入容器
+```shell
+docker exec -it [container-name/container-id] /bin/bash
+```
+
+6. Copy镜像
+```shell
+docker commit [image-name] [image-name-new]
+```
