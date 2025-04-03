@@ -1,17 +1,17 @@
 # 使用官方Node.js镜像作为基础镜像(安装依赖)
-FROM node:21-alpine as dependencies
+FROM node:latest as dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
 # 打包
-FROM node:21-alpine as builder
+FROM node:latest as builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY ./ ./
 RUN npm run build
 
-FROM node:21-alpine as runner
+FROM node:latest as runner
 WORKDIR /app
 ENV NODE_ENV production
 
