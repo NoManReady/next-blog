@@ -7,7 +7,7 @@
 ✔ 结合 Riverpod（让全局状态管理更清晰）
 ```
 
-## 安装依赖
+1. 安装依赖
 
 ```yaml
 dependencies:
@@ -22,7 +22,7 @@ dependencies:
 
 ```
 
-## 引入 Hive 进行持久化缓存
+2. 引入 Hive 进行持久化缓存
 
 - 使用 Hive 作为缓存存储，避免 SharedPreferences 不能存二进制数据的限制
 
@@ -39,7 +39,7 @@ void main() async {
 
 ```
 
-## 添加缓存拦截器
+3. 添加缓存拦截器
 
 
 ```dart
@@ -114,7 +114,7 @@ final dioClient = DioClient();
 ✅ forceRefresh 参数可手动刷新缓存
 ✅ 提供 clearCache() 方法清理缓存
 
-## 缓存拦截器
+4. 缓存拦截器
 - 新建 _CacheInterceptor：
 ```dart
 class _CacheInterceptor extends Interceptor {
@@ -168,7 +168,7 @@ class _CacheInterceptor extends Interceptor {
 ✅ 当网络错误时，自动返回缓存数据
 ✅ 支持 forceRefresh 强制刷新
 
-##  在 Riverpod 里使用
+5. 在 Riverpod 里使用
 
 ```dart
 final dioProvider = Provider<Dio>((ref) => dioClient.dio);
@@ -192,7 +192,7 @@ final freshUserProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 ✅ userProvider 会自动缓存 5 分钟
 ✅ freshUserProvider 强制刷新数据
 
-## 手动清除缓存
+6. 手动清除缓存
 
 ```dart
 void clearCache() async {
@@ -204,13 +204,15 @@ void clearCache() async {
 ✅ 调用 dioClient.clearCache() 可清除所有缓存
 
 
-## 🔥 终极优化总结
-功能	解决方案
-Token 存储	SharedPreferences 持久化
-Token 自动刷新	401 触发 _refreshToken()
-网络请求自动重试	_RetryInterceptor
-日志打印	_LogInterceptor
-GET 请求缓存	_CacheInterceptor + HiveCacheStore
-强制刷新数据	extra: {'refresh': true}
-自动返回缓存数据	网络错误时返回缓存数据
-手动清除缓存	dioClient.clearCache()
+7. 🔥 终极优化总结
+```html
+功能：解决方案
+Token 存储：SharedPreferences 持久化
+Token 自动刷新：401 触发 _refreshToken()
+网络请求自动重试：_RetryInterceptor
+日志打印：_LogInterceptor
+GET 请求缓存：_CacheInterceptor + HiveCacheStore
+强制刷新数据：extra: {'refresh': true}
+自动返回缓存数据：网络错误时返回缓存数据
+手动清除缓存：dioClient.clearCache()
+```
